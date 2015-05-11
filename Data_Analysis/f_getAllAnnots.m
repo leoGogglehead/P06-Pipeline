@@ -1,4 +1,4 @@
-function [allEvents, timesUSec, channels, varargout] = f_getAllAnnots(dataset, layerName, params)
+function [allEvents, timesUSec, channels, varargout] = f_getAllAnnots(dataset, layerName)%, params)
   % function will return a cell array of all IEEGAnnotation objects in
   % annotation layer annLayer
 
@@ -20,7 +20,8 @@ function [allEvents, timesUSec, channels, varargout] = f_getAllAnnots(dataset, l
   allEvents = [];
   timesUSec = [];
   channels = [];
-  startTime = params.startUsecs;
+%   startTime = params.startUsecs;
+  startTime = 0;
   allChan = [dataset.channels];
   allChanLabels = {allChan.label};
   annLayer = dataset.annLayer(strcmp(layerName,{dataset.annLayer.name}));

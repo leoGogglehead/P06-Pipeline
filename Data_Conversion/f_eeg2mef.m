@@ -19,7 +19,7 @@ function [] = f_eeg2mef(animalDir, dataBlockLen, gapThresh, mefBlockSize)
 %       f_eeg2mef('Z:\public\DATA\Animal_Data\DichterMAD\r097\Hz2000',0.1,10000,10);
 %
 %     
-%     dbstop in f_eeg2mef at 25;
+%     dbstop in f_eeg2mef at 105
 
     % portal time starts at midnight on 1/1/1970
     dateFormat = 'mm/dd/yyyy HH:MM:SS';
@@ -43,7 +43,7 @@ function [] = f_eeg2mef(animalDir, dataBlockLen, gapThresh, mefBlockSize)
     EEGList(removeThese) = [];
 
     % confirm there is data in the directory
-    assert(length(EEGList) >= 1, 'No data found in directory.');
+    assert(length(EEGList) >= 1, '%s: No data found in directory.', animalDir);
 
     % create output directory (if needed) for mef files
     outputDir = fullfile(animalDir, 'mef');
@@ -78,7 +78,7 @@ function [] = f_eeg2mef(animalDir, dataBlockLen, gapThresh, mefBlockSize)
       recordTime = char(metadata{1,2}(strcmp(metadata{:,1}, 'Time')));
       BNIList(f).dateNumber = datenum(sprintf('%s %s', recordDate, recordTime), dateFormat);
       BNIList(f).startTime = (BNIList(f).dateNumber - dateOffset + 1) * 24 * 3600 * 1e6;
-      
+            
       if f == 1 % if first BNI file, store the metadata
         % get number of channels, sampling frequency, channel labels...
         animalName = sscanf(char(metadata{1,2}(strcmp(metadata{:,1},'eeg_number'))),'%c',4);
@@ -102,6 +102,9 @@ function [] = f_eeg2mef(animalDir, dataBlockLen, gapThresh, mefBlockSize)
     EEGList = EEGList(IX);
     BNIList = BNIList(IX);
     
+%     fprintf('''%s''\n', datestr(BNIList(1).dateNumber));
+%     return
+
     % convert one channel at a time; first 4 channels are important for
     % dichter data set
     for c = 1: 4  % 1-4 are CA1 and DG, except r151 and r152

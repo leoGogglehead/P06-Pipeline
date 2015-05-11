@@ -67,7 +67,7 @@ function [groupStruct, h] = f_boxPlot(session, runThese, dataKey, layerName)
     end
   end
   sigstar(sigcell, sigprob);
-  ylim([0 300]);
+  ylim([0 700]);
   title(layerName);
 
   % plot rats individually to get a sense where the data points are

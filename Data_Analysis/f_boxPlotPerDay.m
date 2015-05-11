@@ -32,82 +32,80 @@ function f_boxPlotPerDay(session, runDir, runThese, dataKey, layerName)
         eventChannels = 0;
         eventTimesUsec = [-1 -1];
       end
-    catch
-      fprintf('File not found: %s\n',fname);
-      eventChannels = 0;
-      eventTimesUsec = [-1 -1];
-    end
-    
+      
+      % want to combine overlapping annotations for feature analysis.
+      % if end time of first row is later than start time of second row,
+      % there is an overlap - change end time of both to max end time of both
+      % keep running through data until no more changes are found.
+      [~,idx] = sort(eventTimesUsec(:,1));
+      times = eventTimesUsec(idx,:);
+      chans = eventChannels(idx);
 
-    % want to combine overlapping annotations for feature analysis.
-    % if end time of first row is later than start time of second row,
-    % there is an overlap - change end time of both to max end time of both
-    % keep running through data until no more changes are found.
-    [~,idx] = sort(eventTimesUsec(:,1));
-    times = eventTimesUsec(idx,:);
-    chans = eventChannels(idx);
-
-    somethingChanged = 1;
-    while somethingChanged
-      somethingChanged = 0;
-      i = 2;
-      while i <= length(chans)
-        if (times(i-1,2) > times(i,1)) && (times(i-1,2) ~= times(i,2))
-          times(i-1,2) = max([times(i-1,2) times(i,2)]);
-          times(i,2) = max([times(i-1,2) times(i,2)]);
-          somethingChanged = 1;
+      somethingChanged = 1;
+      while somethingChanged
+        somethingChanged = 0;
+        i = 2;
+        while i <= length(chans)
+          if (times(i-1,2) > times(i,1)) && (times(i-1,2) ~= times(i,2))
+            times(i-1,2) = max([times(i-1,2) times(i,2)]);
+            times(i,2) = max([times(i-1,2) times(i,2)]);
+            somethingChanged = 1;
+          end
+          i = i + 1;
         end
-        i = i + 1;
       end
-    end
 
-    % if the end times match between rows, change the start times to the
-    % earliest start time.  keep running until no more changes found.
-    somethingChanged = 1;
-    while somethingChanged
-      somethingChanged = 0;
-      i = 2;
-      while i <= length(chans)
-        if (times(i,1) > times(i-1,1)) && (times(i-1,2) == times(i,2))
-          times(i,1) = times(i-1,1);
-          somethingChanged = 1;
+      % if the end times match between rows, change the start times to the
+      % earliest start time.  keep running until no more changes found.
+      somethingChanged = 1;
+      while somethingChanged
+        somethingChanged = 0;
+        i = 2;
+        while i <= length(chans)
+          if (times(i,1) > times(i-1,1)) && (times(i-1,2) == times(i,2))
+            times(i,1) = times(i-1,1);
+            somethingChanged = 1;
+          end
+          i = i + 1;
         end
-        i = i + 1;
       end
-    end
 
-    % there might be multiple annotations with same start/stop time on the
-    % same channel (from having several annots in same region)
-    [~,idx] = sort(chans);
-    times = times(idx,:);
-    chans = chans(idx);
-    i = length(chans);
-    while i > 1
-      if chans(i) == chans(i-1)
+      % there might be multiple annotations with same start/stop time on the
+      % same channel (from having several annots in same region)
+      [~,idx] = sort(chans);
+      times = times(idx,:);
+      chans = chans(idx);
+      i = length(chans);
+      while i > 1
+        if chans(i) == chans(i-1)
+          if int64(times(i,1)) == int64(times(i-1,1)) && int64(times(i,2)) == int64(times(i-1,2))
+            chans(i) = [];
+            times(i,:) = [];
+           end
+        end
+        i = i - 1;
+      end
+
+      % run from end to beginning of annotations - if start and end times
+      % match, compress into one annotation across multiple channels
+      [~,idx] = sort(times(:,1));
+      times = times(idx,:);
+      chans = num2cell(chans(idx));
+      i = length(chans);
+      while i > 1
         if int64(times(i,1)) == int64(times(i-1,1)) && int64(times(i,2)) == int64(times(i-1,2))
+          chans{i-1} = [chans{i-1} chans{i}];
           chans(i) = [];
           times(i,:) = [];
-         end
+        end
+        i = i - 1;
       end
-      i = i - 1;
+      eventChannels = chans;
+      eventTimesUsec = times;
+    catch
+      fprintf('File not found: %s; downloading data from portal\n',fname);
+      [~, eventTimesUsec, eventChannels] = f_getAllAnnots(session.data(r), layerName);%, params);
     end
-
-    % run from end to beginning of annotations - if start and end times
-    % match, compress into one annotation across multiple channels
-    [~,idx] = sort(times(:,1));
-    times = times(idx,:);
-    chans = num2cell(chans(idx));
-    i = length(chans);
-    while i > 1
-      if int64(times(i,1)) == int64(times(i-1,1)) && int64(times(i,2)) == int64(times(i-1,2))
-        chans{i-1} = [chans{i-1} chans{i}];
-        chans(i) = [];
-        times(i,:) = [];
-      end
-      i = i - 1;
-    end
-    eventChannels = chans;
-    eventTimesUsec = times;
 
     % use histcounts to calculate number of events per day
     dayUsec = 24*60*60*1e6;

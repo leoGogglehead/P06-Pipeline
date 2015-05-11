@@ -11,24 +11,30 @@ addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\ieeg-matlab-1.8.3'));
 
 %% Define constants for the analysis
 study = 'jensen';  % 'dichter'; 'jensen'; 'pitkanen'
-runThese = [1:2]; % not 13! [22-29? 3,4,7,8,6,10,15,17];  % jensen: hypoxia = 6,10,15,17; vehicle 3,4,7,8
+runThese = [24]; % not 13! [22-29? 3,4,7,8,6,10,15,17];  % jensen: hypoxia = 6,10,15,17; vehicle 3,4,7,8
+trainers = [1:2];
 params.channels = 1:4;
 params.label = 'seizure';
 params.technique = 'linelength';
 params.startTime = '1:00:00:00';  % day:hour:minute:second, in portal time
 params.endTime = '0:00:00:00'; % day:hour:minute:second, in portal time
 
-% check can i enter stop time = 0 and run the whole animal
-% can i run on 1 or 2 channels (ie 1 and 3?)
+featFn{1} = @(x,c) ones(size(c));% @(x,c) max(abs(x(:,c))) ./ rms(x(:,c));   % max over RMS value
+featFn{2} = @(x,c) ones(size(c));% @(x,c) repmat((1+(cond(x(:,c))-1) ./ size(x(:,c),2)),size(c));  % DCN
+featFn{3} = @(x,c) max(abs(x(:,c)));  % max values
+featFn{4} = @(x,c) ones(size(c));% @(x,c) repmat(mean(mean(corr(x))), size(c));  % mean corr value over 4 channels
+featFn{5} = @(x,c) rms(x(:,c)); % rms
+featFn{6} = @(x,c) max(x(:,c).^2); % max of energy
+% featFn{7} = @(x,c) sum((x(1:end-1,c)>repmat(mean(x(:,c)),size(x,1)-1,1)) & x(2:end,c)<repmat(mean(x(:,c)),size(x(:,c),1)-1,1)  | (x(1:end-1,c)<repmat(mean(x(:,c)),size(x(:,c),1)-1,1) & x(2:end,c)>repmat(mean(x(:,c)),size(x(:,c),1)-1,1))); % mean crossings 
 
-eventDetection = 0;
+eventDetection = 1;
 unsupervisedClustering = 0;
 supervisedClustering = 0;
 
 params.plot3DScatter = 0;
 params.plot1DFeatures = 0;
 
-boxPlot = 0;
+boxPlot = 1;
 
 %% Load investigator data key
 switch study
@@ -87,12 +93,38 @@ end
 
 %% clustering
 if unsupervisedClustering
+  allData = struct('channels', cell(length(runThese),1), 'timesUsec', cell(length(runThese),1), 'features', cell(length(runThese),1));
   for r = 1:length(runThese)
-    params = f_load_params(params)
-    fprintf('Unsupervised clustering %s_%s on: %s\n',params.label, params.technique, session.data(r).snapName);
-    f_unsupervisedClustering(session.data(r), params, runDir);
-    toc
+    [allData(r).channels, clips, allData(r).timesUsec] = f_loadDataClips(session.data(r), params, runDir);
+    allData(r).features = f_calculateFeatures(allData(r).channels, clips, featFn);
   end
+  clips = [];
+  
+  useTheseFeatures = [6] % which feature functions to use for clustering?
+  allData = f_unsupervisedClustering(session, allData, useTheseFeatures, runThese);
+  useTheseFeatures = [5] % which feature functions to use for clustering?
+  allData = f_unsupervisedClustering(session, allData, useTheseFeatures, runThese);
+  useTheseFeatures = [3] % which feature functions to use for clustering?
+  allData = f_unsupervisedClustering(session, allData, useTheseFeatures, runThese);
+%   useTheseFeatures = [7]; % which feature functions to use for clustering?
+%   allData = f_unsupervisedClustering(session, allData, useTheseFeatures, runThese);
+%   useTheseFeatures = [1]; % which feature functions to use for clustering?
+%   allData = f_unsupervisedClustering(allData, useTheseFeatures, runThese);
+
+  layerName = sprintf('%s-%s-%s', params.label, params.technique, 'kmeans');
+  for r = 1:length(runThese)
+    f_uploadAnnotations(session.data(r), layerName, allData(r).timesUsec, allData(r).channels, 'Event');
+  end
+end
+
+if supervisedClustering
+  for r = 1:length(runThese)
+%     f_loadTraingData();
+%     f_loadDataClips();
+%     f_calculateFeatures();
+%     f_addAnnotations();
+  end
+%   f_supervisedClustering(session.data(r), params, runDir);
 end
 
 

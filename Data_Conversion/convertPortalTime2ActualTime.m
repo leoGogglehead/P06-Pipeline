@@ -12,13 +12,36 @@
 %
 % actualTime will be displayed in the matlab command window:
 % 'portalTime 02-Jan-2015 08:44:10 = actualTime 10-May-2008 22:03:16'
-% 
-% r099 = I032_A0002_D001, start time = '05/09/2008 13:19:06'
-% r101 = I032_A0004_D001, start time = '06/05/2008 14:12:37'
-% r121 = I032_A0007_D001, start time = '03/17/2009 12:47:37'
-% r161 = I032_A0015_D001, start time = '07/21/2011 17:09:07'
 
-portalTime = datenum('02:08:44:10', 'dd:HH:MM:SS');
-dateOffset = datenum('05/09/2008 13:19:06', 'mm/dd/yyyy HH:MM:SS') - datenum('01:00:00:00', 'dd:HH:MM:SS');
+study = 'jensen';  % 'dichter'; 'jensen'; 'pitkanen'
+portalId = 'I023_A0024_D001';
+convertFromPortalToActual = '02:01:46:28';  % 'dd:HH:MM:SS'; 01:00:00:00 = start time of portal
+convertFromActualToPortal = '06/26/2014 1:40:23 AM';  % mm/dd/yyyy HH:MM:SS PM
+
+%%.......
+
+switch study
+  case 'dichter'
+    rootDir = 'Z:\public\DATA\Animal_Data\DichterMAD';
+    runDir = 'C:\Users\jtmoyer\Documents\MATLAB\P05-Dichter-data';
+  case 'jensen'
+    rootDir = 'Z:\public\DATA\Animal_Data\Frances_Jensen';
+    runDir = 'C:\Users\jtmoyer\Documents\MATLAB\P04-Jensen-data';
+end
+addpath(genpath(runDir));
+fh = str2func(['f_' study '_data_key']);
+dataKey = fh();
+
+idx = find(strcmp(dataKey.portalId, portalId));
+
+dateOffset = datenum(dataKey.startTime(idx), 'dd-mmm-yyyy HH:MM:SS') - datenum('01:00:00:00', 'dd:HH:MM:SS');
+
+portalTime = datenum(convertFromPortalToActual, 'dd:HH:MM:SS');
 actualTime = datestr(portalTime + dateOffset);
-fprintf('portalTime %s = actualTime %s\n', datestr(portalTime), datestr(actualTime));
+fprintf('Portal %s = Animal %s\n', dataKey.portalId{idx}, dataKey.animalId{idx});
+fprintf('portalTime %s = actualTime %s\n', convertFromPortalToActual, datestr(actualTime, 'mm/dd/yyyy HH:MM:SS PM'));
+
+actualTime = datenum(convertFromActualToPortal, 'mm/dd/yyyy HH:MM:SS PM');
+portalTime = datestr(actualTime - dateOffset, 'dd:HH:MM:SS');
+fprintf('actualTime %s = portalTime %s\n', datestr(actualTime), portalTime);
+
