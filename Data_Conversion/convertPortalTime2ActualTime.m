@@ -15,8 +15,8 @@
 
 study = 'jensen';  % 'dichter'; 'jensen'; 'pitkanen'
 portalId = 'I023_A0024_D001';
-convertFromPortalToActual = '02:01:46:28';  % 'dd:HH:MM:SS'; 01:00:00:00 = start time of portal
-convertFromActualToPortal = '06/26/2014 1:40:23 AM';  % mm/dd/yyyy HH:MM:SS PM
+convertFromPortalToActual = '05:04:01:22';  % 'dd:HH:MM:SS'; 01:00:00:00 = start time of portal
+convertFromActualToPortal = '4/26/2014 14:54:22';  % mm/dd/yyyy HH:MM:SS PM
 
 %%.......
 
@@ -39,9 +39,9 @@ dateOffset = datenum(dataKey.startTime(idx), 'dd-mmm-yyyy HH:MM:SS') - datenum('
 portalTime = datenum(convertFromPortalToActual, 'dd:HH:MM:SS');
 actualTime = datestr(portalTime + dateOffset);
 fprintf('Portal %s = Animal %s\n', dataKey.portalId{idx}, dataKey.animalId{idx});
-fprintf('portalTime %s = actualTime %s\n', convertFromPortalToActual, datestr(actualTime, 'mm/dd/yyyy HH:MM:SS PM'));
+fprintf('portalTime %s = actualTime %s\n', convertFromPortalToActual, datestr(actualTime, 'mm/dd/yyyy HH:MM:SS'));
 
-actualTime = datenum(convertFromActualToPortal, 'mm/dd/yyyy HH:MM:SS PM');
+actualTime = datenum(convertFromActualToPortal, 'mm/dd/yyyy HH:MM:SS');
 portalTime = datestr(actualTime - dateOffset, 'dd:HH:MM:SS');
-fprintf('actualTime %s = portalTime %s\n', datestr(actualTime), portalTime);
+fprintf('actualTime %s = portalTime %s\n', datestr(actualTime, 'dd-mmm-yyyy HH:MM:SS'), portalTime);
 

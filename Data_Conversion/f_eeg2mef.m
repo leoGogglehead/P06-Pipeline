@@ -102,7 +102,7 @@ function [] = f_eeg2mef(animalDir, dataBlockLen, gapThresh, mefBlockSize)
     EEGList = EEGList(IX);
     BNIList = BNIList(IX);
     
-%     fprintf('''%s''\n', datestr(BNIList(1).dateNumber));
+%     fprintf('''%s:%s''\n', animalDir(43:46), datestr(BNIList(1).dateNumber));
 %     return
 
     % convert one channel at a time; first 4 channels are important for

@@ -1,27 +1,15 @@
-%% Jensen_wrapper.m
-% This script load data and annotations from the portal, analyzes the data,
-% performs clustering, then uploads the results back to the portal.
-
 clearvars -except session; 
-% clear all; 
+% clear all;  
 close all; clc; tic;
 addpath('C:\Users\jtmoyer\Documents\MATLAB\');
 addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\ieeg-matlab-1.8.3'));
 
 %% Define constants for the analysis
 study = 'jensen';  % 'dichter'; 'jensen'; 'pitkanen'
-runThese = [1:34]; % [3,4,7,8,6,10,15,17];  % jensen: hypoxia = 6,10,15,17; vehicle 3,4,7,8
-params.channels = 1:4;
-params.label = 'training';
-params.technique = 'data';
-params.startTime = '0:00:00:00';  % day:hour:minute:second, in portal time
-params.endTime = '0:00:00:00'; % day:hour:minute:second, in portal time
+runThese = [1:34]; 
 
-% check can i enter stop time = 0 and run the whole animal
-% can i run on 1 or 2 channels (ie 1 and 3?)
-
-backupAnnotations = 1;
-
+removeAnnotations = 0;
+layerName = '2-minus-pinging';
 
 %% Load investigator data key
 switch study
@@ -47,8 +35,9 @@ dataKey = fh();
 % Load session if it doesn't exist.
 if ~exist('session','var')  % load session if it does not exist
   session = IEEGSession(dataKey.portalId{runThese(1)},'jtmoyer','jtm_ieeglogin.bin');
+%   session = IEEGSession(dataKey.portalId{runThese(1)},'jtmoyer','jtm_ieeglogin.bin','qa');
   for r = 2:length(runThese)
-    runThese(r)
+%     runThese(r)
     session.openDataSet(dataKey.portalId{runThese(r)});
   end
 else    % clear and throw exception if session doesn't have the right datasets
@@ -63,25 +52,20 @@ for r = 1: length(session.data)
 end  
 
 
-%% Backup annotations 
-if backupAnnotations
-  for r = 1:length(runThese)
-    fprintf('Backing up %s_%s on: %s\n',params.label, params.technique, session.data(r).snapName);
-    layerName = sprintf('%s-%s', params.label, params.technique);
-
-    params.startUsecs = 0;
-    params.endUsecs = session.data(r).channels(1).get_tsdetails().getDuration;
-  
-    % get annotations
-    if ~isempty(session.data(r).annLayer(strcmp(layerName,{session.data(r).annLayer.name})))
-      [allEvents, timeUsec, channels, labels] = f_getAllAnnots(session.data(r), layerName);
-
-      % save to mat file
-      annotFile = fullfile(runDir, sprintf('/Output/%s-backupAnnot-%s-%s.mat',session.data(r).snapName,params.label,params.technique));
-      save(annotFile,'timeUsec','channels','labels','-v7.3');
-    else
-      fprintf('%s: %s not found.\n', session.data(r).snapName, layerName);
+%% Feature detection and annotation upload 
+if removeAnnotations
+  a = input(sprintf('Do you really want to remove the layer %s? (y/n): ', layerName), 's');
+  if strcmpi(a, 'y')
+    for r = 1:length(runThese)
+      if ~isempty(session.data(r).annLayer(strcmp(layerName,{session.data(r).annLayer.name})))
+        session.data(r).removeAnnLayer(layerName);
+        fprintf('Removed %s on: %s\n', layerName, session.data(r).snapName);
+      else
+        fprintf('%s: %s not found.\n', session.data(r).snapName, layerName);
+      end
     end
+  else
+     fprintf('No annotations removed.\n', session.data(r).snapName, layerName);
   end
 end
 

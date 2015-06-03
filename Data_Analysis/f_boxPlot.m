@@ -8,7 +8,7 @@ function [groupStruct, h] = f_boxPlot(session, runThese, dataKey, layerName)
   % dataKey: table of index, animalId, portalId, treatmentGroup
   % layerName: annotation layer for which to plot events
   %
-%   dbstop in f_boxPlot at 76;
+%   dbstop in f_boxPlot at 44;
   
   groupName = cell(length(runThese),1);
   lengthInDays = nan(length(runThese),1);

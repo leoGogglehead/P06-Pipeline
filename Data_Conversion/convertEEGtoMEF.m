@@ -14,7 +14,7 @@ addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\ieeg-matlab-1.8.3'));
 
 % define constants for simulation
 study = 'jensen';  % 'dichter'; 'jensen'; 'pitkanen'
-runThese = [14]; % see dataKey indices
+runThese = [19:34]; % see dataKey indices
 dataBlockLenHr = 0.1; % hours; size of data block to pull from .eeg file
 mefGapThresh = 10000; % msec; min size of gap in data to be called a gap
 mefBlockSize = 10; % sec; size of block for mefwriter to write
@@ -50,7 +50,7 @@ dataKey = fh();
 %% convert data from EEG to mef
 if convert
   for r = 1: length(runThese)
-    animalDir = fullfile(rootDir,char(dataKey.animalId(runThese(r))),'Hz2000');
+    animalDir = fullfile(rootDir,char(dataKey.animalId(runThese(r))),'2000Hz');
     f_eeg2mef(animalDir, dataBlockLenHr, mefGapThresh, mefBlockSize);
   end
 end
@@ -76,7 +76,7 @@ if test
   end  
 
   for r = 1: length(runThese)
-    animalDir = fullfile(rootDir,char(dataKey.animalId(runThese(r))),'Hz2000');
+    animalDir = fullfile(rootDir,char(dataKey.animalId(runThese(r))),'2000Hz');
     f_test_eeg2mef(session.data(r), animalDir, dataBlockLenHr);
   end
 end
