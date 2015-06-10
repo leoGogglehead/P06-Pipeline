@@ -9,20 +9,13 @@ function f_uploadAnnotations(dataset,layerName,eventTimesUSec,eventChannels,labe
 %
 %	Function will upload to the IEEG portal the given events obtained from running various detection
 %	algorithms (e.g. spike_AR.m). Annotations will be associated with eventChannels and given a label.
-%
+%files(d).name(1:15)
 %   v2 3/15/2015 - Hoameng Ung - added variable channel support
 %   
 
-  try 
-      fprintf('\n%s: Removing existing layer: %s\n', dataset.snapName, layerName);
-      dataset.removeAnnLayer(layerName);
-  catch 
-      fprintf('No existing layer\n');
-  end
   try
-    annLayer = dataset.addAnnLayer(layerName);
     ann = [];
-    fprintf('Creating annotations...');
+%     fprintf('Creating annotations...');
     %create cell array of unique channels in eventChannels
     strEventChannels = cellfun(@num2str,eventChannels,'UniformOutput',0);
     uniqueChannels = unique(strEventChannels);
@@ -32,17 +25,24 @@ function f_uploadAnnotations(dataset,layerName,eventTimesUSec,eventChannels,labe
         tmpChan = uniqueChannels(i);
         ann = [ann IEEGAnnotation.createAnnotations(eventTimesUSec(idx,1),eventTimesUSec(idx,2),'Event',label,dataset.channels(uniqueChannels{i}))];
     end
-    fprintf('done!\n');
+%     fprintf('done!\n');
     numAnnot = numel(ann);
     startIdx = 1;
     %add annotations 5000 at a time (freezes if adding too many)
-    fprintf('Adding annotations to layer %s...\n',layerName);
+    try 
+  %       fprintf('\n%s: Removing existing layer: %s\n', dataset.snapName, layerName);
+        dataset.removeAnnLayer(layerName);
+    catch 
+  %       fprintf('No existing layer\n');
+    end
+    annLayer = dataset.addAnnLayer(layerName);
+    fprintf('%s: Adding %d annotations to layer %s...\n', dataset.snapName, numAnnot, layerName);
     for i = 1:ceil(numAnnot/5000)
-        fprintf('Adding %d to %d\n',startIdx,min(startIdx+5000,numAnnot));
+%         fprintf('Adding %d to %d\n',startIdx,min(startIdx+5000,numAnnot));
         annLayer.add(ann(startIdx:min(startIdx+5000,numAnnot)));
         startIdx = startIdx+5000;
     end
-    fprintf('done!\n');
+%     fprintf('done!\n');
   catch
     fprintf('No annotations to upload.\n');
   end

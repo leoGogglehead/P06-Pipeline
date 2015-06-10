@@ -2,8 +2,7 @@
 % This script load data and annotations from the portal, analyzes the data,
 % performs clustering, then uploads the results back to the portal.
 
-clearvars -except session;% allData; 
-% clear all;  
+clearvars -except session;
 close all; clc; tic;
 addpath('C:\Users\jtmoyer\Documents\MATLAB\');
 addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\libsvm-3.18'));
@@ -12,19 +11,17 @@ addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\ieeg-matlab-1.8.3'));
 %% Define constants for the analysis
 study = 'jensen';  % 'dichter'; 'jensen'; 'pitkanen'
 runThese = [26]; % not 6, 13! [22-29? 3,4,7,8,6,10,15,17];  % jensen: hypoxia = 6,10,15,17; vehicle 3,4,7,8
-trainers = [1:2];
 params.channels = 1:4;
 params.label = 'training';
 params.technique = 'data';
 params.startTime = '1:00:00:00';  % day:hour:minute:second, in portal time
 params.endTime = '0:00:00:00'; % day:hour:minute:second, in portal time
-
-params.lookAtArtifacts = 0;
+params.lookAtArtifacts = 0; % lookAtArtifacts = 1 means keep artifacts to see what's being removed
 
 eventDetection = 0;
 unsupervisedClustering = 1;
-supervisedClustering = 0;
-addAnnotations = 1;  % need to add this
+addAnnotations = 0;  
+scoreDetections = 0;
 boxPlot = 0;
 
 %% Load investigator data key
@@ -47,7 +44,7 @@ dataKey = fh();
 fh = str2func(['f_' study '_params']);
 params = fh(params)
 fh = str2func(['f_' study '_define_features']);
-featFn = fh()
+featFn = fh();
 
 
 %% Establish IEEG Sessions
@@ -67,12 +64,12 @@ else    % clear and throw exception if session doesn't have the right datasets
     error('Need to clear session data.  Re-run the script.');
   end
 end
-for r = 1: length(session.data)
-  fprintf('Loaded %s\n', session.data(r).snapName);
-end  
+% for r = 1: length(session.data)
+%   fprintf('Loaded %s\n', session.data(r).snapName);
+% end  
 
 
-%% Feature detection and annotation upload 
+%% Feature detection 
 fig_h = 1;
 if eventDetection
   for r = 1:length(runThese)
@@ -83,54 +80,54 @@ if eventDetection
   end
 end
 
-% clear allData;
-% dbstop in analyzeDataOnPortal at 105;
-
 %% clustering
 if unsupervisedClustering
   if ~exist('allData', 'var') 
-    allData = struct('channels', cell(length(runThese),1), 'timesUsec', cell(length(runThese),1), 'features', cell(length(runThese),1));
+    allData = struct('channels', cell(length(runThese),1), 'timesUsec', cell(length(runThese),1), 'features', cell(length(runThese),1), 'labels', cell(length(runThese),1));
     for r = 1:length(runThese)
-      [allData(r).channels, clips, allData(r).timesUsec] = f_loadDataClips(session.data(r), params, runDir);
+      [allData(r).channels, clips, allData(r).timesUsec, allData(r).labels] = f_loadDataClips(session.data(r), params, runDir);
 %       if r == 22
 %         keyboard;
 %       end
-      [allData(r).features, allData(r).rawValues] = f_calculateFeatures(allData(r).channels, clips, featFn);
+      allData(r).features = f_calculateFeatures(allData(r).channels, clips, featFn);
       clips = [];
     end
   end
   
-  useData = allData;
-  % remove 60 Hz
-  useTheseFeatures = [1] % which feature functions to use for clustering?
+  useData = allData; 
+%   useTheseFeatures = [1]; % which feature functions to use for clustering?
+%   useData = f_removeAnnotations(session, params, useData, featFn, useTheseFeatures);
+%   useTheseFeatures = [2]; % which feature functions to use for clustering?
+%   useData = f_removeAnnotations(session, params, useData, featFn, useTheseFeatures);
+  useTheseFeatures = [3] % which feature functions to use for clustering?
   useData = f_unsupervisedClustering(session, useData, useTheseFeatures, runThese, params);
-%   useTheseFeatures = [5] % which feature functions to use for clustering?
 %   useData = f_unsupervisedClustering(session, useData, useTheseFeatures, runThese, params);
 %   useTheseFeatures = [3] % which feature functions to use for clustering?
 %   useData = f_unsupervisedClustering(session, useData, useTheseFeatures, runThese, params);
 
-  layerName = sprintf('%s-%s-%s', params.label, params.technique, 'minus-60Hz');
+  layerName = sprintf('%s-%s-%s', params.label, params.technique, 'minus60and1Hz');
   for r = 1:length(runThese)
     if addAnnotations f_uploadAnnotations(session.data(r), layerName, useData(r).timesUsec, useData(r).channels, 'Event'); end;
   end
 end
 
-if supervisedClustering
-  for r = 1:length(runThese)
-%     f_loadTraingData();
-%     f_loadDataClips();
-%     f_calculateFeatures();
-%     f_addAnnotations();
-  end
-%   f_supervisedClustering(session.data(r), params, runDir);
+
+%% Score detections
+if scoreDetections
+%   f_boxPlot(session, runThese, dataKey, sprintf('%s-%s',params.label, params.technique)); % 'SVMSeizure-2');
+  viewAnnots2(session); % 'SVMSeizure-2');  
+  fprintf('Box plot: %s\n', params.label, params.technique, session.data(r).snapName);
+  toc
 end
 
 
 %% Analyze results
 if boxPlot
-  f_boxPlot(session, runThese, dataKey, sprintf('%s-%s',params.label, params.technique)); % 'SVMSeizure-2');
-%   f_boxPlotPerDay(session, runDir, runThese, dataKey, sprintf('%s-%s',params.label, params.technique)); % 'SVMSeizure-2');  
+%   f_boxPlot(session, runThese, dataKey, sprintf('%s-%s',params.label, params.technique)); % 'SVMSeizure-2');
+  f_boxPlotPerDay(session, runDir, runThese, dataKey, sprintf('%s-%s',params.label, params.technique)); % 'SVMSeizure-2');  
   fprintf('Box plot: %s\n', params.label, params.technique, session.data(r).snapName);
   toc
 end
+
+
 

@@ -121,10 +121,17 @@ function f_eventDetection(dataset, params, runDir)
           line([(startPlot-leftTime)/1e6/60 (endPlot-leftTime)/1e6/60],[params.maxThresh/max(output(ftIdx,c+1)) params.maxThresh/max(output(ftIdx,c+1))],'Color','b');
           hold off;
         end
-
+        
         p = p + 1;
         keyboard;
-        clf;
+ 
+        % plots for AES       
+        figure(2); hold on;
+        for c = 1: 4
+          plot((time(dataIdx)-leftTime)/1e6/60, c+data(dataIdx,c)/max(data(dataIdx,c)), 'Color', [0.5 0.5 0.5]);          
+        end
+        
+       clf;
       end
     end
 

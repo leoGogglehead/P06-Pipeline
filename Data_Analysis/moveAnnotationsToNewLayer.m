@@ -6,10 +6,12 @@ addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\ieeg-matlab-1.8.3'));
 
 %% Define constants for the analysis
 study = 'jensen';  % 'dichter'; 'jensen'; 'pitkanen'
-runThese = [1:34]; 
+runThese = [2]; 
 
-removeAnnotations = 0;
-layerName = 'seizure-linelength-minus-60and1Hz';
+switchAnnotations = 1;
+origLayerName = 'training-data';
+newLayerName = 'start-stop';
+textPattern = 'EEG';
 
 %% Load investigator data key
 switch study
@@ -53,21 +55,33 @@ end
 
 
 %% Feature detection and annotation upload 
-if removeAnnotations
-  a = input(sprintf('Do you really want to remove the layer %s? (y/n): ', layerName), 's');
+if switchAnnotations
+  a = input(sprintf('Do you really want to move ''%s'' annotations from %s to %s? (y/n): ', textPattern, origLayerName, newLayerName), 's');
   if strcmpi(a, 'y')
     for r = 1:length(runThese)
       try
-%         if ~isempty(session.data(r).annLayer(strcmp(layerName,{session.data(r).annLayer.name})))
-        session.data(r).removeAnnLayer(layerName);
-        fprintf('Removed %s on: %s\n', layerName, session.data(r).snapName);
-%         end
-      catch
-        fprintf('%s: %s not found.\n', session.data(r).snapName, layerName);
+        [allEvents, timesUSec, channels] = f_getAllAnnots(session.data(r), origLayerName);
+        labels = {allEvents.description}';
+        matches = cellfun(@regexpi, labels, cellstr(repmat(textPattern, length(labels),1)),'UniformOutput',false);
+        idx = ~cellfun(@isempty, matches);  % 1 in idx will be moved to new layer
+     catch
+        idx = [];
+        fprintf('%s: %s not found.\n', session.data(r).snapName, origLayerName);
+      end
+%       labels = {allEvents.description}';
+      if ~isempty(find(idx,1))
+        % some of the start/annotations are really short, make them 1 sec long
+        tooShort = (timesUSec(:,2) - timesUSec(:,1)) < 1e6;
+        timesUSec(logical(idx.*tooShort),2) = timesUSec(logical(idx.*tooShort),1) + 1e6;
+        f_uploadAnnotations(session.data(r), newLayerName, timesUSec(idx,:), channels(idx), labels(idx));
+        f_uploadAnnotations(session.data(r), origLayerName, timesUSec(~idx,:), channels(~idx), labels(~idx));
+        fprintf('Moved %d annotations from %s to %s on: %s\n', length(find(idx)), origLayerName, newLayerName, session.data(r).snapName);
+      else
+        fprintf('%s: No annotations moved.\n', session.data(r).snapName);
       end
     end
   else
-     fprintf('%s: %s. No annotations removed.\n', session.data(r).snapName, layerName);
+     fprintf('%s: No annotations moved.\n', session.data(r).snapName);
   end
 end
 

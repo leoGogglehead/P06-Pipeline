@@ -1,30 +1,20 @@
-function [channels, clips, timesUsec] = f_loadDataClips(dataset, params, runDir)
+function [channels, clips, timesUsec, labels] = f_loadDataClips(dataset, params, runDir)
 % Usage: f_feature_energy(dataset, params)
 % Input: 
 %   'dataset'   -   [IEEGDataset]: IEEG Dataset, eg session.data(1)
 %   'params'    -   Structure containing parameters for the analysis
 % 
-%   dbstop in f_unsupervisedClustering at 91
-
-% download training data from portal and save to file or load from file
-% download data from portal and save to file or load from file
-% calculate features for each training clip - don't save these to file yet
-% calculate features for each data clip - don't save these to file yet
-% cluster 
-% - maybe several times, w/ different features
-% - how to keep track of which clips go to which animal?
-% - ideally would be able to click on data points in scatter plots and view
-
+%   dbstop in f_loadDataClips at 18
     
   % download data from portal or load from file
   params.startUsecs = 0;
   fs = dataset.sampleRate;
   clipsFile =  fullfile(runDir, sprintf('/Output/%s-clips-%s-%s.mat',dataset.snapName,params.label,params.technique));
-%   clipsFile = fullfile(runDir, sprintf('/Output/seizures-%s-%s.mat',params.label,params.technique));
   if ~exist(clipsFile, 'file')
     layerName = sprintf('%s-%s', params.label, params.technique);
     try
       [allEvents, timesUsec, channels] = f_getAllAnnots(dataset, layerName);
+      labels = {allEvents.description}';
       fprintf('%s: Downloading data clips from portal...\n', dataset.snapName);
     
       % save data clips to file for fast retrieval
@@ -49,7 +39,7 @@ function [channels, clips, timesUsec] = f_loadDataClips(dataset, params, runDir)
         clips{i} = tmpDat;
       end
       clips = clips(~cellfun('isempty', clips)); 
-      save(clipsFile, 'clips', 'timesUsec', 'channels', '-v7.3');
+      save(clipsFile, 'clips', 'timesUsec', 'channels', 'labels', '-v7.3');
     catch
       fprintf('%s: layer %s does not exist.\n', dataset.snapName, layerName);
       channels = [];

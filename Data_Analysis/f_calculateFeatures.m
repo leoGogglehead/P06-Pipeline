@@ -1,10 +1,10 @@
-function [features, rawValues] = f_calculateFeatures(channels, clips, featFn)
+function features = f_calculateFeatures(channels, clips, featFn)
 % Usage: f_feature_energy(dataset, params)
 % Input: 
 %   'dataset'   -   [IEEGDataset]: IEEG Dataset, eg session.data(1)
 %   'params'    -   Structure containing parameters for the analysis
 % 
-%    dbstop in f_calculateFeatures at 30
+% dbstop in f_calculateFeatures at 34
 
 % download training data from portal and save to file or load from file
 % download data from portal and save to file or load from file
@@ -28,13 +28,13 @@ function [features, rawValues] = f_calculateFeatures(channels, clips, featFn)
 %       features{i,f} = normpdf(rawValues{i,f});
       features{i,f} = featFn{f}(clips{i}, channels{i});
     end
-    toc
+%     toc
   end
-  rawValues = features;
-  means = mean(reshape([features{:}], [], length(featFn)));
-  stds = std(reshape([features{:}], [], length(featFn)));
+%   rawValues = features;
+  means = mean(reshape([features{:}], [], length(featFn))); % means = zeros(1, length(featFn)); % 
+  stds = std(reshape([features{:}], [], length(featFn))); % stds = zeros(1, length(featFn)); % 
   for f = 1: length(featFn)
-    if stds ~= 0
+    if stds(f) ~= 0
       features(:,f) = cellfun(@(x) (x-means(f))/stds(f), features(:,f), 'UniformOutput', false);
     else
       features(:,f) = cellfun(@(x) (x-means(f)), features(:,f), 'UniformOutput', false);
