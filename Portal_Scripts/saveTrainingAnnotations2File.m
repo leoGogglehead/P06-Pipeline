@@ -1,24 +1,21 @@
 %% Jensen_wrapper.m
-% This script load data and annotations from the portal, analyzes the data,
-% performs clustering, then uploads the results back to the portal.
+% This script will save annotations on the portal to a file.  This is
+% useful for backing up training data, hand annotated data, etc.
 
 clearvars -except session; 
 % clear all; 
 close all; clc; tic;
 addpath('C:\Users\jtmoyer\Documents\MATLAB\');
+addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\P06-Pipeline'));
 addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\ieeg-matlab-1.8.3'));
 
 %% Define constants for the analysis
 study = 'jensen';  % 'dichter'; 'jensen'; 'pitkanen'
-runThese = [1:34]; % [3,4,7,8,6,10,15,17];  % jensen: hypoxia = 6,10,15,17; vehicle 3,4,7,8
-params.channels = 1:4;
-params.label = 'start';
-params.technique = 'stop';
-params.startTime = '0:00:00:00';  % day:hour:minute:second, in portal time
-params.endTime = '0:00:00:00'; % day:hour:minute:second, in portal time
+runThese = [1:34]; % use index value in data key
+layerName = 'start-stop';  % name of the layer to save to disk
+outputDir = 'C:\Users\jtmoyer\Documents\MATLAB\P04-Jensen-data\Backup_Annots'; % output directory for file
 
-saveAnnotations = 1;
-outputDir = 'C:\Users\jtmoyer\Documents\MATLAB\P04-Jensen-data\Output\TrainingData';
+saveAnnotations = 1;  % flag to prevent script from overwriting data accidentally
 
 %% Load investigator data key
 switch study
@@ -65,24 +62,35 @@ end
 timesUsec = [];
 channels = {};
 labels = {};
-layerName = sprintf('%s-%s', params.label, params.technique);
 if saveAnnotations
   for r = 1:length(runThese)
     fprintf('Getting %s on: %s\n', layerName, session.data(r).snapName);
-    params.startUsecs = 0;
-    params.endUsecs = session.data(r).channels(1).get_tsdetails().getDuration;
-  
     % get annotations
     try
       [allEvents, timesUsec, channels] = f_getAllAnnots(session.data(r), layerName);
       labels = {allEvents.description}';
 
       % save to mat file
-      clipsFile = fullfile(runDir, sprintf('/Output/%s-backupAnnot-%s-%s.mat',session.data(r).snapName,params.label,params.technique));
-      save(clipsFile, 'timesUsec', 'channels', 'labels', '-v7.3');
-    catch
+      clipsFile = fullfile(outputDir, sprintf('%s-backupAnnot-%s.mat',session.data(r).snapName,layerName));
+      if exist(clipsFile, 'file');
+        a = input(sprintf('%s exists: proceed? y/n: ', clipsFile), 's');
+      else
+        a = 'y';
+      end
+      if strcmpi(a, 'y')
+        save(clipsFile, 'timesUsec', 'channels', 'labels', '-v7.3');
+        fprintf('Saved %s.\n', clipsFile);
+      end
+    catch err
+      if isempty(find(strcmp({session.data(r).annLayer(:).name}, 'training-data')))
+        fprintf('Check layer %s exists in dataset %s.\n', layerName, session.data(r).snapName);
+      else
+        rethrow(err);
+      end
     end
   end
+else
+  fprintf('No annotations saved: change saveAnnotations to 1.\n');
 end
 
 

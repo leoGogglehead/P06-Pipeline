@@ -1,6 +1,6 @@
-%% Jensen_wrapper.m
-% This script load data and annotations from the portal, analyzes the data,
-% performs clustering, then uploads the results back to the portal.
+% This script recovers saved annotations from a backup file and uploads
+% them to the portal.  Can be used to complement
+% saveTrainingAnnotations2File.
 
 clear all; 
 % clear all; 
@@ -10,8 +10,31 @@ addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\ieeg-matlab-1.8.3'));
 
 %% Define constants for the analysis
 study = 'jensen';  % 'dichter'; 'jensen'; 'pitkanen'
-dataPath = 'C:\Users\jtmoyer\Documents\MATLAB\P04-Jensen-data\Output\TrainingData';
-layerName = 'start-stop';
+dataPath = 'C:\Users\jtmoyer\Documents\MATLAB\P04-Jensen-data\Output\';
+layerName = 'training-data';
+overwriteAnnotations = 0;
+
+%% upload annotations to portal
+files = dir(dataPath);
+for d = 1:length(files)
+  if ~files(d).isdir
+    if ~isempty(strfind(files(d).name, layerName))
+      if ~exist('session', 'var')
+        session = IEEGSession(files(d).name(1:15),'jtmoyer','jtm_ieeglogin.bin');
+      else
+        session.openDataSet(files(d).name(1:15));
+      end
+      load(fullfile(dataPath,files(d).name));
+      if overwriteAnnotations
+        labels = 'Event';
+%        f_uploadAnnotations(session.data(length(session.data)), layerName, timesUsec, channels, labels);
+      else
+        fprintf('No annotations uploaded = set overwriteAnnotations to 1.\n');
+      end
+    end
+  end
+end
+
 
 % %% Load investigator data key
 % switch study
@@ -51,19 +74,3 @@ layerName = 'start-stop';
 % for r = 1: length(session.data)
 %   fprintf('Loaded %s\n', session.data(r).snapName);
 % end  
-
-%% upload annotations to portal
-files = dir(dataPath);
-for d = 1:length(files)
-  if ~files(d).isdir
-    if ~exist('session', 'var')
-      session = IEEGSession(files(d).name(1:15),'jtmoyer','jtm_ieeglogin.bin');
-    else
-      session.openDataSet(files(d).name(1:15));
-    end
-    if ~isempty(strfind(files(d).name, layerName))
-      load(fullfile(dataPath,files(d).name));
-%       f_uploadAnnotations(session.data(length(session.data)), files(d).name(29:41), timeUsec, channels, labels);
-    end
-  end
-end

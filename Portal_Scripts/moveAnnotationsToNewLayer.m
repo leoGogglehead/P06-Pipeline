@@ -1,17 +1,24 @@
+% This script will move annotations made on one layer to another layer.
+% The annotations should have some text pattern that identifies which ones
+% to move - ie, EEGstart, EEGstop - use 'EEG'
+% This script will overwrite the old layer with the existing annotations,
+% minus the ones that have been moved to the new layer.  Script will also
+% add the new layer with the desired annotations.
+
 clearvars -except session; 
-% clear all;  
 close all; 
 addpath('C:\Users\jtmoyer\Documents\MATLAB\');
 addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\ieeg-matlab-1.8.3'));
 
 %% Define constants for the analysis
 study = 'jensen';  % 'dichter'; 'jensen'; 'pitkanen'
-runThese = [2]; 
+runThese = [1]; % index of animals in data key
 
-switchAnnotations = 1;
-origLayerName = 'training-data';
-newLayerName = 'start-stop';
-textPattern = 'EEG';
+origLayerName = 'training-data'; % name of existing layer, move annots from here
+newLayerName = 'start-stop'; % name of new layer, move annots to here
+textPattern = 'EEG'; % text common to all annotations you want moved
+
+switchAnnotations = 0; % flag to prevent script from running accidentally
 
 %% Load investigator data key
 switch study
@@ -56,7 +63,7 @@ end
 
 %% Feature detection and annotation upload 
 if switchAnnotations
-  a = input(sprintf('Do you really want to move ''%s'' annotations from %s to %s? (y/n): ', textPattern, origLayerName, newLayerName), 's');
+  a = 'y'; % input(sprintf('Do you really want to move ''%s'' annotations from %s to %s? (y/n): ', textPattern, origLayerName, newLayerName), 's');
   if strcmpi(a, 'y')
     for r = 1:length(runThese)
       try
