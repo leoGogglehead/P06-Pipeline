@@ -9,7 +9,7 @@ study = 'jensen';  % 'dichter'; 'jensen'; 'pitkanen'
 runThese = [1:34]; 
 
 removeAnnotations = 0;
-layerName = 'seizure-linelength-minus-60and1Hz';
+layerName = 'seizure-linelength-minus60and1Hz';
 
 %% Load investigator data key
 switch study

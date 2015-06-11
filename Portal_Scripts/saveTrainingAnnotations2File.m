@@ -11,7 +11,7 @@ addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\ieeg-matlab-1.8.3'));
 
 %% Define constants for the analysis
 study = 'jensen';  % 'dichter'; 'jensen'; 'pitkanen'
-runThese = [1:34]; % use index value in data key
+runThese = [16,29]; % use index value in data key
 layerName = 'start-stop';  % name of the layer to save to disk
 outputDir = 'C:\Users\jtmoyer\Documents\MATLAB\P04-Jensen-data\Backup_Annots'; % output directory for file
 
@@ -42,7 +42,6 @@ dataKey = fh();
 if ~exist('session','var')  % load session if it does not exist
   session = IEEGSession(dataKey.portalId{runThese(1)},'jtmoyer','jtm_ieeglogin.bin');
   for r = 2:length(runThese)
-    runThese(r)
     session.openDataSet(dataKey.portalId{runThese(r)});
   end
 else    % clear and throw exception if session doesn't have the right datasets

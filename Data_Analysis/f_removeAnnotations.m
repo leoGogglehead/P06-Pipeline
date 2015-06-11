@@ -4,29 +4,31 @@ function allData = f_removeAnnotations(session, params, allData, featFn, useThes
 %   'dataset'   -   [IEEGDataset]: IEEG Dataset, eg session.data(1)
 %   'params'    -   Structure containing parameters for the analysis
 % 
-%   dbstop in f_removeAnnotations at 32
+%   dbstop in f_removeAnnotations at 16
   
   featFn(useTheseFeatures)
   useData = allData;
   for u = 1: length(useTheseFeatures)
-    f = useTheseFeatures(u);
+    f = 1; % useTheseFeatures(u);
     for r = 1: size(allData,1)
-      for a = size(allData(r).features,1): -1: 1
+      for a = size(allData(r).classes,1): -1: 1
         if params.lookAtArtifacts
-          removeIdx = find(allData(r).features{a,f} == 0);
+          removeIdx = find(allData(r).classes{a,f} == 1);
         else
-          removeIdx = find(allData(r).features{a,f} == 1);
+          removeIdx = find(allData(r).classes{a,f} == 0);
         end
-        if length(removeIdx) == length(allData(r).features{a,f})
+        if length(removeIdx) == length(allData(r).classes{a,f})
           allData(r).channels(a) = [];
           allData(r).timesUsec(a,:) = [];
           allData(r).features(a,:) = [];
           allData(r).labels(a,:) = [];
+          allData(r).classes(a,:) = [];
         else
           for i = 1: size(allData(r).features,2)
             allData(r).features{a,i}(removeIdx) = [];
           end
           allData(r).channels{a}(removeIdx) = [];
+          allData(r).classes{a}(removeIdx) = [];
         end
       end
     end

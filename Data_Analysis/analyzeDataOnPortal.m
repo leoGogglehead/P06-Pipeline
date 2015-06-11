@@ -10,17 +10,17 @@ addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\ieeg-matlab-1.8.3'));
 
 %% Define constants for the analysis
 study = 'jensen';  % 'dichter'; 'jensen'; 'pitkanen'
-runThese = [26]; % not 6, 13! [22-29? 3,4,7,8,6,10,15,17];  % jensen: hypoxia = 6,10,15,17; vehicle 3,4,7,8
+runThese = [1:34]; % training data = 2,3,19,22,24,25,26
 params.channels = 1:4;
-params.label = 'training';
-params.technique = 'data';
+params.label = 'seizure';
+params.technique = 'linelength';
 params.startTime = '1:00:00:00';  % day:hour:minute:second, in portal time
 params.endTime = '0:00:00:00'; % day:hour:minute:second, in portal time
-params.lookAtArtifacts = 0; % lookAtArtifacts = 1 means keep artifacts to see what's being removed
+params.lookAtArtifacts = 1; % lookAtArtifacts = 1 means keep artifacts to see what's being removed
 
 eventDetection = 0;
 unsupervisedClustering = 1;
-addAnnotations = 0;  
+addAnnotations = 1;  
 scoreDetections = 0;
 boxPlot = 0;
 
@@ -89,23 +89,52 @@ if unsupervisedClustering
 %       if r == 22
 %         keyboard;
 %       end
-      allData(r).features = f_calculateFeatures(allData(r).channels, clips, featFn);
+      allData(r).features = f_calculateFeatures(allData(r), clips, featFn);
       clips = [];
     end
   end
   
+%   bins = 0:15:300;
+%   for i = 1: size(allData,1)
+%     for a = 1:length(allData(i).labels)
+%       if ~isempty(strfind(allData(i).labels{a}, 'grooming'))
+%         for c = 1: length(allData(i).channels{a})
+%           figure(1); bar(bins, allData(i).features{a,3}{c}, 'histc');
+%           ylim([0 300]);
+%           title(allData(i).labels{a});
+%           pause;
+%         end
+%       end
+%     end
+%   end
+%     
+%   for i = 1: size(allData,1)
+%     for a = 1:length(allData(i).labels)
+%       if ~isempty(strfind(allData(i).labels{a}, 'seizure'))
+%         for c = 1: length(allData(i).channels{a})
+%           figure(1); bar(bins, allData(i).features{a,3}{c}, 'histc');
+%           ylim([0 300]);
+%           title(allData(i).labels{a});
+%           pause;
+%         end
+%       end
+%     end
+%   end
+%     
   useData = allData; 
-%   useTheseFeatures = [1]; % which feature functions to use for clustering?
-%   useData = f_removeAnnotations(session, params, useData, featFn, useTheseFeatures);
+  useTheseFeatures = [3]; % which feature functions to use for clustering?
+  useData = f_unsupervisedClustering(session, useData, useTheseFeatures, runThese, params);
+  useData = f_removeAnnotations(session, params, useData, featFn, useTheseFeatures);
+
 %   useTheseFeatures = [2]; % which feature functions to use for clustering?
 %   useData = f_removeAnnotations(session, params, useData, featFn, useTheseFeatures);
-  useTheseFeatures = [3] % which feature functions to use for clustering?
-  useData = f_unsupervisedClustering(session, useData, useTheseFeatures, runThese, params);
+%   useTheseFeatures = [3] % which feature functions to use for clustering?
+%   useData = f_unsupervisedClustering(session, useData, useTheseFeatures, runThese, params);
 %   useData = f_unsupervisedClustering(session, useData, useTheseFeatures, runThese, params);
 %   useTheseFeatures = [3] % which feature functions to use for clustering?
 %   useData = f_unsupervisedClustering(session, useData, useTheseFeatures, runThese, params);
 
-  layerName = sprintf('%s-%s-%s', params.label, params.technique, 'minus60and1Hz');
+  layerName = sprintf('%s-%s-%s', params.label, params.technique, 'grooming-artifact');
   for r = 1:length(runThese)
     if addAnnotations f_uploadAnnotations(session.data(r), layerName, useData(r).timesUsec, useData(r).channels, 'Event'); end;
   end

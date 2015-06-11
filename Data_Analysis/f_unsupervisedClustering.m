@@ -4,7 +4,7 @@ function allData = f_unsupervisedClustering(session, allData, funcInds, runThese
 %   'dataset'   -   [IEEGDataset]: IEEG Dataset, eg session.data(1)
 %   'params'    -   Structure containing parameters for the analysis
 % 
-%    dbstop in f_unsupervisedClustering at 45
+%    dbstop in f_unsupervisedClustering at 16
 
   %.....
   % code that sets a threshold and removes detections above it
@@ -14,7 +14,7 @@ function allData = f_unsupervisedClustering(session, allData, funcInds, runThese
   end
   
   try
-    binWidth = 1;
+    binWidth = 0.5;
     bins = floor(min(featurePts)):binWidth:ceil(max(featurePts));
     h1 = hist(featurePts, bins);
   %   bar(bins, h1);

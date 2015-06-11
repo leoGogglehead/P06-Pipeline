@@ -1,10 +1,10 @@
-function features = f_calculateFeatures(channels, clips, featFn)
+function features = f_calculateFeatures(data, clips, featFn)
 % Usage: f_feature_energy(dataset, params)
 % Input: 
 %   'dataset'   -   [IEEGDataset]: IEEG Dataset, eg session.data(1)
 %   'params'    -   Structure containing parameters for the analysis
 % 
-% dbstop in f_calculateFeatures at 34
+%   dbstop in f_calculateFeatures at 33
 
 % download training data from portal and save to file or load from file
 % download data from portal and save to file or load from file
@@ -23,23 +23,23 @@ function features = f_calculateFeatures(channels, clips, featFn)
   fprintf('Calculating features...\n');
   features = cell(length(clips),length(featFn));
   for f = 1: size(featFn,2)
-    for i = 1: size(channels,1)
+    for i = 1: size(data.channels,1)
 %       rawValues{i,f} = featFn{f}(clips{i}, channels{i});
 %       features{i,f} = normpdf(rawValues{i,f});
-      features{i,f} = featFn{f}(clips{i}, channels{i});
+      features{i,f} = featFn{f}(clips{i}, data.channels{i});
     end
 %     toc
   end
 %   rawValues = features;
-  means = mean(reshape([features{:}], [], length(featFn))); % means = zeros(1, length(featFn)); % 
-  stds = std(reshape([features{:}], [], length(featFn))); % stds = zeros(1, length(featFn)); % 
-  for f = 1: length(featFn)
-    if stds(f) ~= 0
-      features(:,f) = cellfun(@(x) (x-means(f))/stds(f), features(:,f), 'UniformOutput', false);
-    else
-      features(:,f) = cellfun(@(x) (x-means(f)), features(:,f), 'UniformOutput', false);
-    end
-  end
+%   means = mean(reshape([features{:}], [], length(featFn))); % means = zeros(1, length(featFn)); % 
+%   stds = std(reshape([features{:}], [], length(featFn))); % stds = zeros(1, length(featFn)); % 
+%   for f = 1: length(featFn)
+%     if stds(f) ~= 0
+%       features(:,f) = cellfun(@(x) (x-means(f))/stds(f), features(:,f), 'UniformOutput', false);
+%     else
+%       features(:,f) = cellfun(@(x) (x-means(f)), features(:,f), 'UniformOutput', false);
+%     end
+%   end
 end
 
 
