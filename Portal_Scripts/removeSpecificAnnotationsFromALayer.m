@@ -1,15 +1,20 @@
+% This script will remove specific annotations from a given layer.  For
+% instance, use this to remove annotations made before recording start or
+% after recording end.
+
 clearvars -except session; 
-% clear all;  
 close all; 
-addpath('C:\Users\jtmoyer\Documents\MATLAB\');
+addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\P06-Pipeline'));
 addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\ieeg-matlab-1.8.3'));
 
 %% Define constants for the analysis
 study = 'jensen';  % 'dichter'; 'jensen'; 'pitkanen'
-runThese = [1]; 
+runThese = [7:12,14:34]; % index of animals in data key
 
-removeAnnotations = 0;
-layerName = 'seizure-linelength-grooming-artifact';
+origLayerName = 'seizure-linelength'; % name of existing layer, move annots from here
+newLayerName = 'seizure-linelength-start-stop'; % name of new layer, move annots to here
+
+removeAnnotations = 0; % flag to prevent script from running accidentally
 
 %% Load investigator data key
 switch study
@@ -52,22 +57,28 @@ for r = 1: length(session.data)
 end  
 
 
-%% Feature detection and annotation upload 
+%% Note start/stop times are in the study specific data key.
 if removeAnnotations
-  a = input(sprintf('Do you really want to remove the layer %s? (y/n): ', layerName), 's');
+  a = input(sprintf('Do you really want to remove annotations from %s? (y/n): ', origLayerName), 's');
   if strcmpi(a, 'y')
     for r = 1:length(runThese)
       try
-%         if ~isempty(session.data(r).annLayer(strcmp(layerName,{session.data(r).annLayer.name})))
-        session.data(r).removeAnnLayer(layerName);
-        fprintf('Removed %s on: %s\n', layerName, session.data(r).snapName);
-%         end
-      catch
-        fprintf('%s: %s not found.\n', session.data(r).snapName, layerName);
+        [allEvents, timesUSec, channels] = f_getAllAnnots(session.data(r), origLayerName);
+        startUsecs = round((datenum(dataKey.startEEG(runThese(r)), 'dd-mmm-yyyy HH:MM:SS') - datenum(dataKey.startSystem(runThese(r)), 'dd-mmm-yyyy HH:MM:SS'))*24*60*60*1e6);
+        endUsecs = round((datenum(dataKey.endEEG(runThese(r)), 'dd-mmm-yyyy HH:MM:SS') - datenum(dataKey.startSystem(runThese(r)), 'dd-mmm-yyyy HH:MM:SS'))*24*60*60*1e6);
+        keepThese = find(timesUSec(:,1) > startUsecs & timesUSec(:,2) < endUsecs);
+      catch err
+        rethrow(err);
+      end
+      if ~isempty(keepThese)
+        f_uploadAnnotations(session.data(r), newLayerName, timesUSec(keepThese,:), channels(keepThese), 'seizure');
+        fprintf('Removed %d/%d annotations: %s\n', length(allEvents) - length(keepThese), length(allEvents), session.data(r).snapName);
+      else
+        fprintf('%s: Removed all annotations.\n', session.data(r).snapName);
       end
     end
   else
-     fprintf('%s: %s. No annotations removed.\n', session.data(r).snapName, layerName);
+     fprintf('%s: No annotations removed.\n', session.data(r).snapName);
   end
 end
 

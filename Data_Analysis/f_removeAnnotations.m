@@ -12,11 +12,11 @@ function allData = f_removeAnnotations(session, params, allData, featFn, useThes
     f = 1; % useTheseFeatures(u);
     for r = 1: size(allData,1)
       for a = size(allData(r).classes,1): -1: 1
-        if params.lookAtArtifacts
+%         if params.lookAtArtifacts
+%           removeIdx = find(allData(r).classes{a,f} == 1);
+%         else
           removeIdx = find(allData(r).classes{a,f} == 1);
-        else
-          removeIdx = find(allData(r).classes{a,f} == 0);
-        end
+%         end
         if length(removeIdx) == length(allData(r).classes{a,f})
           allData(r).channels(a) = [];
           allData(r).timesUsec(a,:) = [];

@@ -34,7 +34,7 @@ dataKey = fh();
 
 idx = find(strcmp(dataKey.portalId, portalId));
 
-dateOffset = datenum(dataKey.startTime(idx), 'dd-mmm-yyyy HH:MM:SS') - datenum('01:00:00:00', 'dd:HH:MM:SS');
+dateOffset = datenum(dataKey.startSystem(idx), 'dd-mmm-yyyy HH:MM:SS') - datenum('01:00:00:00', 'dd:HH:MM:SS');
 
 portalTime = datenum(convertFromPortalToActual, 'dd:HH:MM:SS');
 actualTime = datestr(portalTime + dateOffset);

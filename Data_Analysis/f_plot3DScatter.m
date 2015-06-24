@@ -1,15 +1,16 @@
-function f_plot3DScatter(featurePts, idx, funcInds)
+function h1 = f_plot3DScatter(featurePts, idx, funcInds)
   % idx == true = an artifact
   %   dbstop in f_plot3DScatter at 9;
 
-  figure(1);
+  h1 = figure(1);
   if size(funcInds,2) == 1
     bins = min(floor(featurePts)):1:ceil(max(featurePts));
     h = hist(featurePts(~idx,1), bins);
     bar(bins, h, 'FaceColor', 'k'); hold on;
     h = hist(featurePts(idx,1), bins);
     bar(bins, h, 'FaceColor', [0.7 0.7 0.7]);
-    ylim([0 100]); title(sprintf('feature %d',funcInds));
+%     ylim([0 500]); 
+    title(sprintf('feature %d',funcInds));
   elseif size(funcInds,2) == 2
     scatter(reshape(featurePts(~idx,1),[],1), reshape(featurePts(~idx,2),[],1), 12, 'k', 'filled'); hold on;
     scatter(reshape(featurePts(idx,1),[],1), reshape(featurePts(idx,2),[],1), 12, [0.7 0.7 0.7], 'filled');

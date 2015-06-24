@@ -1,16 +1,13 @@
-function f_eventDetection(dataset, params, runDir)
+function f_eventDetection(dataset, params, runDir, dataRow)
   % Usage: f_feature_energy(dataset, params)
   % Input: 
   %   'dataset'   -   [IEEGDataset]: IEEG Dataset, eg session.data(1)
   %   'params'    -   Structure containing parameters for the analysis
   % 
-%        dbstop in f_eventDetection at 77
+  dbstop in f_eventDetection at 10
   
-  % Add ability to append annotations?  Append them to the file...then
-  % reupload.  This could save a lot of time...
-  % how to handle comparison with doug's annotations
-  % add a maxThresh (would be helpful for bursts) or just clean data after?
-  leftovers = 0;
+  leftovers = 0; % simple counter to find events that are extend beyond the end of a block
+  % for simplicty these events are just terminated at the end of the block
 
   % user specifies start/end time for analysis (in portal time), in form day:hour:minute:second
   % convert these times to usecs from start of file
@@ -18,14 +15,15 @@ function f_eventDetection(dataset, params, runDir)
   timeValue = sscanf(params.startTime,'%d:');
   params.startUsecs = ((timeValue(1)-1)*24*60*60 + timeValue(2)*60*60 + ...
     timeValue(3)*60 + timeValue(4))*1e6; 
-  if params.startUsecs < 0  % happens if you set the day to 0
-    params.startUsecs = 0;
+  if params.startUsecs <= 0  % day = 0 or 1:00:00:00
+    params.startUsecs = round((datenum(dataRow.startEEG, 'dd-mmm-yyyy HH:MM:SS') - datenum(dataRow.startSystem, 'dd-mmm-yyyy HH:MM:SS'))*24*60*60*1e6);
   end
   timeValue = sscanf(params.endTime,'%d:');
   params.endUsecs = ((timeValue(1)-1)*24*60*60 + timeValue(2)*60*60 + ...
     timeValue(3)*60 + timeValue(4))*1e6; 
+  % save time by only analyzing data that is relevant
   if params.endUsecs <= 0 || params.endUsecs > dataset.channels(1).get_tsdetails().getDuration
-    params.endUsecs = dataset.channels(1).get_tsdetails().getDuration;
+    params.endUsecs = round((datenum(dataRow.endEEG, 'dd-mmm-yyyy HH:MM:SS') - datenum(dataRow.startSystem, 'dd-mmm-yyyy HH:MM:SS'))*24*60*60*1e6);
   end
   
   % calculate number of blocks = # of times to pull data from portal

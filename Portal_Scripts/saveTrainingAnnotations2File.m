@@ -11,8 +11,8 @@ addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\ieeg-matlab-1.8.3'));
 
 %% Define constants for the analysis
 study = 'jensen';  % 'dichter'; 'jensen'; 'pitkanen'
-runThese = [16,29]; % use index value in data key
-layerName = 'start-stop';  % name of the layer to save to disk
+runThese = [1:5,7:12,14:34]; % use index value in data key
+layerName = 'seizure-linelength';  % name of the layer to save to disk
 outputDir = 'C:\Users\jtmoyer\Documents\MATLAB\P04-Jensen-data\Backup_Annots'; % output directory for file
 
 saveAnnotations = 1;  % flag to prevent script from overwriting data accidentally
@@ -91,42 +91,5 @@ if saveAnnotations
 else
   fprintf('No annotations saved: change saveAnnotations to 1.\n');
 end
-
-
-%       [allEvents, tmptimesUsec, tmpchannels] = f_getAllAnnots(session.data(r), layerName);
-%       tmplabels = {allEvents.description};
-%       szridx = ~cellfun(@isempty, regexp(tmplabels, 'seizure')); % true = seizure/seizure-artifact
-% 
-%       szrTimes = tmptimesUsec(szridx,:);
-%       szrChannels = tmpchannels(szridx);
-% 
-%       % add ability to save data clips to file for fast retrieval
-%       tmpclips = cell(size(szrTimes,1),1);
-%       numChans = length(session.data(r).channels);
-%       for i = 1:size(szrTimes,1)
-%         % get data - sometimes it takes a few tries for portal to respond
-%         count = 0;
-%         successful = 0;
-%         while count < 10 && ~successful
-%           try
-%             tmpDat = dataset.getvalues(timesUsec(i,1), timesUsec(i,2)-timesUsec(i,1), 1:numChans);
-%             successful = 1;
-%           catch
-%             count = count + 1;
-%             fprintf('Try #: %d\n', count);
-%           end
-%         end
-%         if ~successful
-%           error('Unable to get data.');
-%         end
-% 
-%         tmpDat(isnan(tmpDat)) = 0;
-%         tmpclips{i} = tmpDat;
-%       end
-% 
-% %       clips = [clips; tmpclips(~cellfun(@isempty,tmpclips))];  % true = not an artifact 
-%       timesUsec = [timesUsec; szrTimes];
-%       channels = [channels; szrChannels];
-%       labels = [labels; tmplabels(szridx)'];
 
 

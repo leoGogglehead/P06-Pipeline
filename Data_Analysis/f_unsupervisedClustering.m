@@ -1,41 +1,52 @@
-function allData = f_unsupervisedClustering(session, allData, funcInds, runThese, params)
+function allData = f_unsupervisedClustering(session, allData, funcInds, runThese, params, runDir)
 % Usage: f_feature_energy(dataset, params)
 % Input: 
 %   'dataset'   -   [IEEGDataset]: IEEG Dataset, eg session.data(1)
 %   'params'    -   Structure containing parameters for the analysis
 % 
-%    dbstop in f_unsupervisedClustering at 16
+%    dbstop in f_unsupervisedClustering at 46
 
   %.....
   % code that sets a threshold and removes detections above it
   featurePts = [];
   for r = 1: length(runThese)
     featurePts = [featurePts; reshape([allData(r).features{:,funcInds}], {}, length(funcInds))];
-  end
+%   end
   
-  try
-    binWidth = 0.5;
+%     featurePts = (featurePts - mean(featurePts)) / std(featurePts);
+    
+    try
+
+      % %  code for thresholding
+    binWidth = 1;
     bins = floor(min(featurePts)):binWidth:ceil(max(featurePts));
     h1 = hist(featurePts, bins);
   %   bar(bins, h1);
     localMinima = [false diff(sign(diff(h1))) > 0 true];
   %   topTwoThirds = (1:nbins) > nbins/3;
-    aboveMedian = bins >= hist(median(featurePts),bins);
-    thresh = bins(logical(localMinima .* aboveMedian));
+    atLeast = bins > 3;
+%     aboveMedian = bins > hist(median(featurePts),bins);
+    thresh = bins(logical(localMinima .* atLeast));
     thresh = thresh(1) - binWidth/2;  % set thresh to left edge
-    
+    fprintf('%s: threshold = %0.3f\n', session.data(r).snapName, thresh);
   % remove values greater than threshold
   % too look at what's being removed on portal, switch to a <=
     if params.lookAtArtifacts 
-      cIdx = (featurePts < repmat(thresh, length(featurePts), 1));
+      cIdx = (featurePts <= repmat(thresh, length(featurePts), 1));
     else
-      cIdx = (featurePts >= repmat(thresh, length(featurePts), 1));
+      cIdx = (featurePts > repmat(thresh, length(featurePts), 1));
     end
 
-    if params.plot3DScatter 
-      f_plot3DScatter(featurePts, cIdx, funcInds);
+% %  code for gaussian mixture model
+%       gmFit = gmdistribution.fit(featurePts(featurePts<100),2);
+%       cIdx = logical(cluster(gmFit, featurePts) - 1);
+
+      if params.plot3DScatter 
+        h = f_plot3DScatter(featurePts, cIdx, funcInds);
+        print(h, fullfile(runDir, 'output', 'Figures', [session.data(r).snapName '_scatter.png']), '-dpng');
+      end
+    catch 
     end
-  catch 
   end
   
   % set artifact points to 1, non artifacts to 0

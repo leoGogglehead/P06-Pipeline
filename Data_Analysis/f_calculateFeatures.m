@@ -4,7 +4,7 @@ function features = f_calculateFeatures(data, clips, featFn)
 %   'dataset'   -   [IEEGDataset]: IEEG Dataset, eg session.data(1)
 %   'params'    -   Structure containing parameters for the analysis
 % 
-%   dbstop in f_calculateFeatures at 33
+%   dbstop in f_calculateFeatures at 43
 
 % download training data from portal and save to file or load from file
 % download data from portal and save to file or load from file

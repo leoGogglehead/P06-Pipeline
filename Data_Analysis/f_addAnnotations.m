@@ -7,7 +7,7 @@ function f_addAnnotations(dataset, params, runDir)
   %	Function will upload to the IEEG portal the given events obtained from running various detection
   %	algorithms (e.g. spike_AR.m). Annotations will be associated with eventChannels and given a label.
   %
-%   dbstop in f_addAnnotations at 38
+%   dbstop in f_addAnnotations at 15
 
   % read in annotations from text file
   % annotations must be in the form [channels timeStartUSecs timeEndUSecs]
