@@ -4,7 +4,7 @@ function f_eventDetection(dataset, params, runDir, dataRow)
   %   'dataset'   -   [IEEGDataset]: IEEG Dataset, eg session.data(1)
   %   'params'    -   Structure containing parameters for the analysis
   % 
-  dbstop in f_eventDetection at 10
+%    dbstop in f_eventDetection at 30
   
   leftovers = 0; % simple counter to find events that are extend beyond the end of a block
   % for simplicty these events are just terminated at the end of the block
@@ -28,8 +28,9 @@ function f_eventDetection(dataset, params, runDir, dataRow)
   
   % calculate number of blocks = # of times to pull data from portal
   % calculate number of windows = # of windows over which to calc feature
-  fs = dataset.sampleRate;
+  fs = dataset.channels(2).sampleRate;
   durationHrs = (params.endUsecs - params.startUsecs)/1e6/60/60;    % duration in hrs
+  params.NumData = durationHrs * 3600 * fs;
   numBlocks = ceil(durationHrs/(params.blockDurMinutes/60));    % number of data blocks
   blockSize = params.blockDurMinutes * 60 * 1e6;        % size of block in usecs
 
@@ -73,7 +74,9 @@ function f_eventDetection(dataset, params, runDir, dataRow)
     %%-----------------------------------------
     %%---  feature creation and data processing
     fh = str2func(sprintf('f_%s_%s', params.label, params.technique));
-    output = fh(data,params,fs,curTime);
+%     output = fh(data,params,fs,curTime);
+    [timeOut, slowFastRate, relPow] = fh(data,params,fs,curTime);
+    output = [timeOut slowFastRate];
     %%---  feature creation and data processing
     %%-----------------------------------------
    
@@ -109,14 +112,14 @@ function f_eventDetection(dataset, params, runDir, dataRow)
         dataIdx = find(startPlot <= time & time <= endPlot);
         ftIdx = find(startPlot <= output(:,1) & output(:,1) <= endPlot);
         for c = 1: length(params.channels)
-          figure(1); subplot(2,2,c); hold on;
-          plot((time(dataIdx)-leftTime)/1e6/60, data(dataIdx,c)/max(data(dataIdx,c)), 'Color', [0.5 0.5 0.5]);
-          plot((output(ftIdx,1)-leftTime)/1e6/60, output(ftIdx,c+1)/max(output(ftIdx,c+1)),'k');
+          figure(1); subplot(3,2,c); hold on;
+          plot((time(dataIdx)-leftTime)/1e6/60, data(dataIdx,c)/max(data(dataIdx,c)), 'Color', [0.5 0.5 0.5]);  
+          plot((output(ftIdx,1)-leftTime)/1e6/60, output(ftIdx,c+1)/max(output(ftIdx,c+1)),'r');
           axis tight;
           xlabel(sprintf('(minutes) Day %d, Hour %d',day,hour));
-          title(sprintf('Channel %d',c));
-          line([(startPlot-leftTime)/1e6/60 (endPlot-leftTime)/1e6/60],[params.minThresh/max(output(ftIdx,c+1)) params.minThresh/max(output(ftIdx,c+1))],'Color','r');
-          line([(startPlot-leftTime)/1e6/60 (endPlot-leftTime)/1e6/60],[params.maxThresh/max(output(ftIdx,c+1)) params.maxThresh/max(output(ftIdx,c+1))],'Color','b');
+          title(sprintf('Channel %d',params.channels(c)));
+%           line([(startPlot-leftTime)/1e6/60 (endPlot-leftTime)/1e6/60],[params.minThresh/max(output(ftIdx,c+1)) params.minThresh/max(output(ftIdx,c+1))],'Color','r');
+%           line([(startPlot-leftTime)/1e6/60 (endPlot-leftTime)/1e6/60],[params.maxThresh/max(output(ftIdx,c+1)) params.maxThresh/max(output(ftIdx,c+1))],'Color','b');
           hold off;
         end
         
@@ -124,10 +127,10 @@ function f_eventDetection(dataset, params, runDir, dataRow)
         keyboard;
  
         % plots for AES       
-        figure(2); hold on;
-        for c = 1: 4
-          plot((time(dataIdx)-leftTime)/1e6/60, c+data(dataIdx,c)/max(data(dataIdx,c)), 'Color', [0.5 0.5 0.5]);          
-        end
+%         figure(2); hold on;
+%         for c = 1: 4
+%           plot((time(dataIdx)-leftTime)/1e6/60, c+data(dataIdx,c)/max(data(dataIdx,c)), 'Color', [0.5 0.5 0.5]);          
+%         end
         
        clf;
       end
