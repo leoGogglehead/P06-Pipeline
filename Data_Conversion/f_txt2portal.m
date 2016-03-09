@@ -18,11 +18,13 @@ function [] = f_txt2portal(dataset, animalDir)
   %    dbstop in f_txt2portal at 70
 
   %....... Directory to .txt file  
-  txtDir = fullfile(animalDir,'');
+%   txtDir = fullfile(animalDir,'');
+    txtDir = 'F:\Grad School\Github\PSG export'
     
   % scan in text data
   try 
-    txt_name = fullfile(txtDir, [animalDir(40:end) '_event list.txt']);
+%     txt_name = fullfile(txtDir, [animalDir(40:end) '_event list.txt']);
+    txt_name = [animalDir '.txt'];
     fid = fopen(txt_name);   
     metadata = textscan(fid,'%[^:]: %[^\n]', 12);
     textscan(fid,'%*[^\n]',1);
@@ -36,11 +38,18 @@ function [] = f_txt2portal(dataset, animalDir)
   % get patient name, confirm it matches the directory name
   % get start time of recorded file
   patientID = char(metadata{1,2}(strcmp(metadata{:,1}, 'Patient Name')));
-  assert(strcmp(patientID(1:15), animalDir(40:end)),'Patient name does not match: %s\n',txt_name);
+%   assert(strcmp(patientID(1:5), animalDir(34:end)),'Patient name does not match: %s\n',txt_name);
   recordTime = char(metadata{1,2}(strcmp(metadata{:,1}, 'Study Date')));
   recordTime = recordTime(10:end);
   dateFormat = 'HH:MM:SS AM';
-  dateOffset = datenum(recordTime, dateFormat); % in days
+  try
+    dateOffset = datenum(recordTime, dateFormat); % in days
+  catch err
+    recordTime = char(metadata{1,2}(strcmp(metadata{:,1}, 'Study Date')));
+    recordTime = recordTime(11:end);
+    dateFormat = 'HH:MM:SS AM';
+    dateOffset = datenum(recordTime, dateFormat);
+  end
   
   % extract label, time, and duration values for each annotation
   % only use labels with a duration value - others are redundant
@@ -61,29 +70,40 @@ function [] = f_txt2portal(dataset, animalDir)
   numStrings = cellfun(@strsplit,textdata{3}(keepInds),'UniformOutput',false);
   duration = zeros(length(numStrings),1);
   for d = 1:length(numStrings)
-    duration(d) = str2double(char(numStrings{d}(1))) * 1e6;
+      duration(d) = str2double(char(numStrings{d}(1))) * 1e6;
   end
   
-  % assign annotations to different layers 
+  % assign annotations to different layers
   layers = cell(length(annotations),1);
   for d = 1: length(annotations)
-    if strcmp(annotations{d}, 'Wake')
-      layers{d} = 'Wake';
-    elseif strcmp(annotations{d}, 'NREM 1')
-      layers{d} = 'NREM1';
-    elseif strcmp(annotations{d}, 'NREM 2')
-      layers{d} = 'NREM2';
-    elseif strcmp(annotations{d}, 'NREM 3')
-      layers{d} = 'NREM3';
-    elseif strcmp(annotations{d}, 'REM')
-      layers{d} = 'REM';
-    elseif (strcmp(annotations{d},'Lights On') || strcmp(annotations{d},'Lights Off'))
-      layers{d} = 'Lights';
-    elseif (strcmp(annotations{d},'CPAP 0') || strcmp(annotations{d},'Diagnostic'))
-      layers{d} = 'CPAP';
-    else
-      layers{d} = 'Notes';
-    end
+      if strcmp(annotations{d}, 'Wake')
+          layers{d} = 'Wake';
+      elseif (strcmp(annotations{d}, 'NREM 1')...
+              || strcmp(annotations{d}, 'Stage 1')...
+              || strcmp(annotations{d}, 'Stage Score, Stage 1'))
+          layers{d} = 'NREM1';
+      elseif (strcmp(annotations{d}, 'NREM 2')...
+              || strcmp(annotations{d}, 'Stage 2')...
+              || strcmp(annotations{d}, 'Stage Score, Stage 2'))
+          layers{d} = 'NREM2';
+      elseif (strcmp(annotations{d}, 'NREM 3')...
+              || strcmp(annotations{d}, 'Stage 3')...
+              || strcmp(annotations{d}, 'Stage Score, Stage 3'))
+          layers{d} = 'NREM3';
+      elseif (strcmp(annotations{d}, 'REM')...
+              || strcmp(annotations{d}, 'Rem'))
+          layers{d} = 'REM';
+      elseif (strcmp(annotations{d},'Lights On') || strcmp(annotations{d},'Lights Off'))
+          layers{d} = 'Lights';
+      elseif (strcmp(annotations{d},'CPAP 0') || strcmp(annotations{d},'Diagnostic'))
+          layers{d} = 'CPAP';
+      elseif strcmp(annotations{d}, 'Arousal')
+          layers{d} = 'Arousal';
+      elseif strncmp(annotations{d}, 'Bad Data', 8)
+          layers{d} = 'Bad Data';
+      else
+          layers{d} = 'Notes';
+      end
   end
     
   %....... Add annotations to portal
