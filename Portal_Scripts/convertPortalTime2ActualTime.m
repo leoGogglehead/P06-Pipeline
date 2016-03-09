@@ -13,20 +13,23 @@
 % actualTime will be displayed in the matlab command window:
 % 'portalTime 02-Jan-2015 08:44:10 = actualTime 10-May-2008 22:03:16'
 
-study = 'jensen';  % 'dichter'; 'jensen'; 'pitkanen'
-portalId = 'I023_A0019_D001';
-convertFromPortalToActual = '01:00:50:30';  % 'dd:HH:MM:SS'; 01:00:00:00 = start time of portal
-convertFromActualToPortal = '4/26/2014 14:54:22';  % mm/dd/yyyy HH:MM:SS PM
+study = 'sleepPSA';  % 'dichter'; 'jensen'; 'pitkanen'
+portalId = 'RB09601';
+convertFromPortalToActual = '01:05:38:00';  % 'dd:HH:MM:SS'; 01:00:00:00 = start time of portal
+convertFromActualToPortal = '04/26/2012 02:01:13 AM';  % mm/dd/yyyy HH:MM:SS PM
 
 %%.......
 
 switch study
-  case 'dichter'
-    rootDir = 'Z:\public\DATA\Animal_Data\DichterMAD';
-    runDir = 'C:\Users\jtmoyer\Documents\MATLAB\P05-Dichter-data';
-  case 'jensen'
-    rootDir = 'Z:\public\DATA\Animal_Data\Frances_Jensen';
-    runDir = 'C:\Users\jtmoyer\Documents\MATLAB\P04-Jensen-data';
+    case 'dichter'
+        rootDir = 'Z:\public\DATA\Animal_Data\DichterMAD';
+        runDir = 'C:\Users\jtmoyer\Documents\MATLAB\P05-Dichter-data';
+    case 'jensen'
+        rootDir = 'Z:\public\DATA\Animal_Data\Frances_Jensen';
+        runDir = 'C:\Users\jtmoyer\Documents\MATLAB\P04-Jensen-data';
+    case 'sleepPSA'
+        addpath(genpath('F:\Grad School\Github\P06-Pipeline'));
+        runDir = 'F:\Grad School\Github\PSG export'
 end
 addpath(genpath(runDir));
 fh = str2func(['f_' study '_data_key']);
@@ -38,10 +41,10 @@ dateOffset = datenum(dataKey.startSystem(idx), 'dd-mmm-yyyy HH:MM:SS') - datenum
 
 portalTime = datenum(convertFromPortalToActual, 'dd:HH:MM:SS');
 actualTime = datestr(portalTime + dateOffset);
-fprintf('Portal %s = Animal %s\n', dataKey.portalId{idx}, dataKey.animalId{idx});
+fprintf('Portal %s = Subject %s\n', dataKey.portalId{idx}, dataKey.animalId{idx});
 fprintf('portalTime %s = actualTime %s\n', convertFromPortalToActual, datestr(actualTime, 'mm/dd/yyyy HH:MM:SS'));
 
 actualTime = datenum(convertFromActualToPortal, 'mm/dd/yyyy HH:MM:SS');
-portalTime = datestr(actualTime - dateOffset, 'dd:HH:MM:SS');
+portalTime = datestr(actualTime - dateOffset + 1, 'dd:HH:MM:SS');
 fprintf('actualTime %s = portalTime %s\n', datestr(actualTime, 'dd-mmm-yyyy HH:MM:SS'), portalTime);
 
