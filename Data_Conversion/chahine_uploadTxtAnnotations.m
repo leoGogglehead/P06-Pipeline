@@ -7,28 +7,33 @@
 clearvars -except session; 
 % clear all; 
 close all; clc; tic;
-addpath('C:\Users\jtmoyer\Documents\MATLAB\');
-addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\ieeg-matlab-1.8.3'));
+% addpath('C:\Users\jtmoyer\Documents\MATLAB\');
+% addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\ieeg-matlab-1.8.3'));
+addpath(genpath('F:\Grad School\Github'));
 
 
 %% Define constants for the analysis
-study = 'chahine';  % 'dichter'; 'jensen'; 'pitkanen'
-runThese = 1;  % jensen 3,4,15,17; dichter 2-3; pitkanen 1-3
+study = 'sleepPSA';  % 'dichter'; 'jensen'; 'pitkanen'
+runThese = 1:5;  % jensen 3,4,15,17; dichter 2-3; pitkanen 1-3
 readRev = 1;  % convert data y/n?
 
 
 %% Load investigator data key
 switch study
-  case 'dichter'
-    addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\P05-Dichter-data'));
-    rootDir = 'Z:\public\DATA\Animal_Data\DichterMAD'; % directory with all the data
-  case 'jensen'
-    addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\P04-Jensen-data')); 
-  case 'chahine'
-    addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\P03-Chahine-data'));
-    rootDir = 'Z:\public\DATA\Human_Data\SleepStudies';   % directory with all the data
-  case 'pitkanen'
-    addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\P01-Pitkanen-data')); 
+    case 'dichter'
+        addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\P05-Dichter-data'));
+        rootDir = 'Z:\public\DATA\Animal_Data\DichterMAD'; % directory with all the data
+    case 'jensen'
+        addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\P04-Jensen-data'));
+    case 'chahine'
+        addpath(genpath('F:\Grad School\Github\P06-Pipeline'));
+        rootDir = 'Z:\public\DATA\Human_Data\UPenn Sleep Studies (Parkinson)';   % directory with all the data
+    case 'sleepPSA'
+        addpath(genpath('F:\Grad School\Github\P06-Pipeline'));
+%         rootDir = 'Z:\public\DATA\Human_Data\UPenn Sleep Studies (Parkinson)'; 
+        rootDir = 'F:\Grad School\Github\PSG export'
+    case 'pitkanen'
+        addpath(genpath('C:\Users\jtmoyer\Documents\MATLAB\P01-Pitkanen-data'));
 end
 fh = str2func(['f_' study '_data_key']);
 dataKey = fh();
@@ -38,7 +43,8 @@ dataKey = fh();
 % Establish IEEG Portal sessions.
 % Load session if it doesn't exist.
 if ~exist('session','var')  % load session if it does not exist
-  session = IEEGSession(dataKey.portalId{runThese(1)},'jtmoyer','jtm_ieeglogin.bin');
+%   addpath(genpath('F:\Grad School\Github'));
+  session = IEEGSession(dataKey.portalId{runThese(1)},'gogglehead','gog_ieeglogin.bin');
   for r = 2:length(runThese)
     runThese(r)
     session.openDataSet(dataKey.portalId{runThese(r)});
@@ -62,4 +68,3 @@ if readRev
     f_txt2portal(session.data(r), animalDir);
   end
 end
-
