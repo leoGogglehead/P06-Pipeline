@@ -1,4 +1,4 @@
-% Jensen_wrapper.m
+ % Jensen_wrapper.m
 % This script load data and annotations from the portal, analyzes the data,
 % performs clustering, then uploads the results back to the portal.
 
@@ -15,7 +15,7 @@ params.channels = 2:7;
 params.label = 'sleep';
 params.technique = 'powerbands';
 params.startTime = '1:01:30:00';  % day:hour:minute:second, in portal time
-params.endTime = '1:05:00:00'; % day:hour:minute:second, in portal time
+params.endTime = '1:09:25:00'; % day:hour:minute:second, in portal time
 params.lookAtArtifacts = 0; % lookAtArtifacts = 1 means keep artifacts to see what's being removed
 
 eventDetection = 1;
@@ -54,9 +54,9 @@ if ~exist('session','var')  % load session if it does not exist
   addpath(genpath('F:\Grad School\Github'));
   session = IEEGSession(dataKey.portalId{runThese(1)},'gogglehead','gog_ieeglogin.bin');
 %   session = IEEGSession(dataKey.portalId{runThese(1)},'jtmoyer','jtm_ieeglogin.bin','qa');
-  for r = 2:length(runThese)
+for r = 1 : length(runThese)
     session.openDataSet(dataKey.portalId{runThese(r)});
-  end
+end
 else    % clear and throw exception if session doesn't have the right datasets
   if (~strcmp(session.data(1).snapName, dataKey.portalId{runThese(1)})) || ...
       (length(session.data) ~= length(runThese))
@@ -65,12 +65,20 @@ else    % clear and throw exception if session doesn't have the right datasets
   end 
 end
 
-
 %% Feature detection 
 fig_h = 1;
 if eventDetection
-  for r = 1:length(runThese)
+%    
+%   for r = 1:length(runThese)
+for r = 1 : length(runThese)
     fprintf('Running %s_%s on: %s\n',params.label, params.technique, session.data(r).snapName);
+    if r == 2
+        params.endTime = '1:10:00:00';
+    end 
+    if r == 3
+        params.channels = 1 : 6;
+    end 
+
     f_eventDetection(session.data(r), params, runDir, dataKey(runThese(r),:));
     if addAnnotations
       f_addAnnotations(session.data(r), params, runDir); 
@@ -78,13 +86,7 @@ if eventDetection
     toc
   end
 end
-
-
-%% LEO - ignore everything below this
-%.....................................
-%.....................................
-
-% %% clustering
+%% clustering
 % if unsupervisedClustering
 %   if ~exist('allData', 'var') 
 %     allData = struct('channels', cell(length(runThese),1), 'timesUsec', cell(length(runThese),1), 'features', cell(length(runThese),1), 'labels', cell(length(runThese),1));
@@ -153,6 +155,4 @@ end
 %   fprintf('Box plot: %s-%s\n', params.label, params.technique);
 %   toc
 % end
-% 
-% 
 % 
